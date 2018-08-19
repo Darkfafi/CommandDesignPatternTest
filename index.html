@@ -12,7 +12,7 @@
 		
 		<div>
 			<h2>LOG</h2>
-			<textarea id="historyTextArea" rows="20" cols="50"></textarea>
+			<textarea id="logTextArea" rows="20" cols="50"></textarea>
 		</div>
 		
 		<div>
@@ -26,8 +26,8 @@
 			let setTextButton = document.getElementById("setTextButton"); // Set Text Button Reference
 			let undoButton = document.getElementById("undoButton"); // Undo Button Reference
 			let redoButton = document.getElementById("redoButton"); // Redo Button Reference
-			let historyTextArea = document.getElementById("historyTextArea"); // History Text Area Reference
-			let timelineVisualizationHolder = document.getElementById("timelineVisualizationHolder"); // History Visualization Reference
+			let logTextArea = document.getElementById("logTextArea"); // Log Text Area Reference
+			let timelineVisualizationHolder = document.getElementById("timelineVisualizationHolder"); // Timeline Visualization Reference
 			
 			
 			let tracker = new ActionTracker(); // Creating the instance of the ActionTracker
@@ -48,15 +48,15 @@
 				()=>
 				{
 					text.innerHTML = inputText; // Set Text to new text at the given time
-					historyTextArea.innerHTML += "DONE: " + actionName + "\n"; // Update history log
-					UpdateVisualizationHistory();
+					logTextArea.innerHTML += "DONE: " + actionName + "\n"; // Update history log
+					UpdateVisualizationTimeline();
 				}, 
 				// Undo
 				()=>
 				{
 					text.innerHTML = prevText; // Set Text to previous text at the given time
-					historyTextArea.innerHTML += "Reverted: " + actionName + "\n"; // Update history log
-					UpdateVisualizationHistory();
+					logTextArea.innerHTML += "Reverted: " + actionName + "\n"; // Update history log
+					UpdateVisualizationTimeline();
 				}));
 				
 				textInput.value = "";
@@ -74,28 +74,30 @@
 				tracker.redoPreviousAction(); // Call the RedoPreviousAction in our tracker
 			}
 			
-			function UpdateVisualizationHistory()
+			// This function updates the visualization of the timeline
+			function UpdateVisualizationTimeline()
 			{
-				let names = tracker.getActionHistoryNamesList();
+				let names = tracker.getActionHistoryNamesList(); // Get the names of the action history
 				
-				timelineVisualizationHolder.innerHTML = "";
+				timelineVisualizationHolder.innerHTML = ""; // clear the previous timeline visualization
 				
 				for(var i = 0; i < names.length; i++)
 				{
-					var e = document.createElement("H4");
-					var styleString = "";
-					e.innerHTML += i+ ": " + names[i];
+					var e = document.createElement("H4"); // For every name, create an h4 element
+					var styleString = ""; // a string for the style so we can dynamically add styling and apply it later.
+					e.innerHTML += i+ ": " + names[i]; // Set the text to the index along with the name
 					
 					styleString = "margin: 0;";
-					if(tracker.getCurrentHistoryIndex() == i)
+					
+					if(tracker.getCurrentHistoryIndex() == i) // If the index is the same as our position on the timeline
 					{
-						e.innerHTML += " <-- CURRENT"
-						styleString += "color: red;";
+						e.innerHTML += " <-- CURRENT"; // Add `<-- CURRENT` to the text
+						styleString += "color: red;"; // And add red to the styling string
 					}
 					
-					e.style = styleString;
-					e.innerHTML += "\n";
-					timelineVisualizationHolder.appendChild(e);
+					e.style = styleString; // Apply styling string
+					e.innerHTML += "\n"; // add a break line
+					timelineVisualizationHolder.appendChild(e); // Add element as child to the holder element.
 				}
 			}
 			
@@ -145,6 +147,7 @@
 					}
 				}
 				
+				// Returns the names of the actions which are tracked inside the ActionsHistory array
 				this.getActionHistoryNamesList = function()
 				{
 					let l = [];
@@ -156,7 +159,7 @@
 					return l;
 				}
 				
-				
+				// Gives index of current timeline position
 				this.getCurrentHistoryIndex = function()
 				{
 					return currentIndex;
