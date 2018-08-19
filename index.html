@@ -1,18 +1,24 @@
 <html>
 	<head>
 		<title>Actions Test</title>
-		<script src="js/Actions/Actions.js"></script>
 	</head>
 	<body>
 	
 		<h3 id="MyText">My Start Text</h3>
-		<input id="textInput" type="textfield"></input>
+		<input id="textInput" type="textfield">
 		<button id="setTextButton"> Set Text </button>
 		<button id="undoButton"> Undo </button>
 		<button id="redoButton"> Redo </button>
 		
-		<h2>HISTORY</h2>
-		<textarea id="historyTextArea" rows="20" cols="50"></textarea>
+		<div>
+			<h2>LOG</h2>
+			<textarea id="historyTextArea" rows="20" cols="50"></textarea>
+		</div>
+		
+		<div>
+			<h2>TIMELINE</h2>
+			<div id="timelineVisualizationHolder"></div>
+		</div>
 		
 		<script>
 			let text = document.getElementById("MyText"); // Display Text Reference
@@ -21,6 +27,7 @@
 			let undoButton = document.getElementById("undoButton"); // Undo Button Reference
 			let redoButton = document.getElementById("redoButton"); // Redo Button Reference
 			let historyTextArea = document.getElementById("historyTextArea"); // History Text Area Reference
+			let timelineVisualizationHolder = document.getElementById("timelineVisualizationHolder"); // History Visualization Reference
 			
 			
 			let tracker = new ActionTracker(); // Creating the instance of the ActionTracker
@@ -42,12 +49,14 @@
 				{
 					text.innerHTML = inputText; // Set Text to new text at the given time
 					historyTextArea.innerHTML += "DONE: " + actionName + "\n"; // Update history log
+					UpdateVisualizationHistory();
 				}, 
 				// Undo
 				()=>
 				{
 					text.innerHTML = prevText; // Set Text to previous text at the given time
 					historyTextArea.innerHTML += "Reverted: " + actionName + "\n"; // Update history log
+					UpdateVisualizationHistory();
 				}));
 				
 				textInput.value = "";
@@ -65,6 +74,30 @@
 				tracker.redoPreviousAction(); // Call the RedoPreviousAction in our tracker
 			}
 			
+			function UpdateVisualizationHistory()
+			{
+				let names = tracker.getActionHistoryNamesList();
+				
+				timelineVisualizationHolder.innerHTML = "";
+				
+				for(var i = 0; i < names.length; i++)
+				{
+					var e = document.createElement("H4");
+					var styleString = "";
+					e.innerHTML += i+ ": " + names[i];
+					
+					styleString = "margin: 0;";
+					if(tracker.getCurrentHistoryIndex() == i)
+					{
+						e.innerHTML += " <-- CURRENT"
+						styleString += "color: red;";
+					}
+					
+					e.style = styleString;
+					e.innerHTML += "\n";
+					timelineVisualizationHolder.appendChild(e);
+				}
+			}
 			
 			// This class will be responsible for executing the actions and tracking them 
 			function ActionTracker()
@@ -96,8 +129,8 @@
 					if(currentIndex >= 0)
 					{
 						// Call the Undo on the current history index
-						actionsHistory[currentIndex].undoMethod();
-						currentIndex --; // Set the tracker of our current history position 1 step in the past
+						currentIndex--; // Set the tracker of our current history position 1 step in the past
+						actionsHistory[currentIndex + 1].undoMethod();
 					}
 				}
 				
@@ -110,6 +143,23 @@
 						currentIndex++; // Do one step into the future
 						actionsHistory[currentIndex].actionMethod(); // And execute the do method of that particulare action
 					}
+				}
+				
+				this.getActionHistoryNamesList = function()
+				{
+					let l = [];
+					for(var i = 0; i < actionsHistory.length; i++)
+					{
+						l.push(actionsHistory[i].actionName);
+					}
+					
+					return l;
+				}
+				
+				
+				this.getCurrentHistoryIndex = function()
+				{
+					return currentIndex;
 				}
 			}
 			
