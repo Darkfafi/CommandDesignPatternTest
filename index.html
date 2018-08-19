@@ -1,0 +1,125 @@
+<html>
+	<head>
+		<title>Actions Test</title>
+		<script src="js/Actions/Actions.js"></script>
+	</head>
+	<body>
+	
+		<h3 id="MyText">My Start Text</h3>
+		<input id="textInput" type="textfield"></input>
+		<button id="setTextButton"> Set Text </button>
+		<button id="undoButton"> Undo </button>
+		<button id="redoButton"> Redo </button>
+		
+		<h2>HISTORY</h2>
+		<textarea id="historyTextArea" rows="20" cols="50"></textarea>
+		
+		<script>
+			let text = document.getElementById("MyText"); // Display Text Reference
+			let textInput = document.getElementById("textInput"); // Input text field Reference
+			let setTextButton = document.getElementById("setTextButton"); // Set Text Button Reference
+			let undoButton = document.getElementById("undoButton"); // Undo Button Reference
+			let redoButton = document.getElementById("redoButton"); // Redo Button Reference
+			let historyTextArea = document.getElementById("historyTextArea"); // History Text Area Reference
+			
+			
+			let tracker = new ActionTracker(); // Creating the instance of the ActionTracker
+			
+			// If we press the set text button
+			setTextButton.onclick = function()
+			{
+				// Note the current text for our undo method
+				let prevText = text.innerHTML;
+				// Note the new text for our do method
+				let inputText = textInput.value;
+				// Note our action name because thats cool
+				let actionName = "Text from '" + prevText + "' to '" + inputText + "'";
+				
+				// call the doAction inside our tracker, and give it a new Action instance
+				tracker.doAction(new Action(actionName, 
+				// Action
+				()=>
+				{
+					text.innerHTML = inputText; // Set Text to new text at the given time
+					historyTextArea.innerHTML += "DONE: " + actionName + "\n"; // Update history log
+				}, 
+				// Undo
+				()=>
+				{
+					text.innerHTML = prevText; // Set Text to previous text at the given time
+					historyTextArea.innerHTML += "Reverted: " + actionName + "\n"; // Update history log
+				}));
+				
+				textInput.value = "";
+			}
+			
+			// If we press the undo button
+			undoButton.onclick = function()
+			{
+				tracker.undoLastAction(); // Call the UndoLastAction method in our tracker
+			}
+			
+			// If we press the redo button
+			redoButton.onclick = function()
+			{
+				tracker.redoPreviousAction(); // Call the RedoPreviousAction in our tracker
+			}
+			
+			
+			// This class will be responsible for executing the actions and tracking them 
+			function ActionTracker()
+			{
+				let actionsHistory = []; // This is an array which will hold all the actions which have been executed. This will provide as our Timeline
+				let currentIndex = 0; // Tracks at what point of time we are in the history
+			
+				// This executes a new Action and adds it to the history stack
+				this.doAction = function(action)
+				{
+					if(action != null && action.actionMethod != null && action.undoMethod != null)
+					{
+						// To keep the timeline clean, the do action must always be the last one in the history
+						if(currentIndex < actionsHistory.length - 1)
+						{
+							actionsHistory.splice(currentIndex + 1, actionsHistory.length - 1); // Cut off previously known future
+						}
+						
+						actionsHistory.push(action); // Add the action to the history
+						currentIndex = actionsHistory.length - 1; // set the current index to the last action recorded into history
+						action.actionMethod(); // Execute the do method set inside the given Action class
+					}
+				}
+				
+				// This executes the undo action on the current action, and then does a step back in the timeline
+				this.undoLastAction = function()
+				{
+					// If we are the first or a later action
+					if(currentIndex >= 0)
+					{
+						// Call the Undo on the current history index
+						actionsHistory[currentIndex].undoMethod();
+						currentIndex --; // Set the tracker of our current history position 1 step in the past
+					}
+				}
+				
+				// This executes the do action inside the next method after going 1 step into the future inside our timeline
+				this.redoPreviousAction = function()
+				{
+					// If our action is not already the last one in the timeline, a.k.a. not already up to date, a.k.a. in the present time
+					if(currentIndex != actionsHistory.length - 1)
+					{
+						currentIndex++; // Do one step into the future
+						actionsHistory[currentIndex].actionMethod(); // And execute the do method of that particulare action
+					}
+				}
+			}
+			
+			// This class is an action, we will be using this in the demo to create the Do and Undo methods inside the 
+			function Action(name,  actionMethod, undoMethod)
+			{
+				this.actionName = name; // The name of the action to have a humain way of understanding the actions functionality
+				this.actionMethod = actionMethod; // The method which will execute the given task
+				this.undoMethod = undoMethod; // The method which will do actions which will revert the changes made by the `actionMethod` method call.
+			}
+		</script>
+	</body>
+</html>
