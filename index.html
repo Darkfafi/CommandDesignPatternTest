@@ -69,8 +69,8 @@
 			// This class will be responsible for executing the actions and tracking them 
 			function ActionTracker()
 			{
-				let actionsHistory = []; // This is an array which will hold all the actions which have been executed. This will provide as our Timeline
-				let currentIndex = 0; // Tracks at what point of time we are in the history
+				let actionsHistory = []; // Our Actions TimeLine
+				let currentIndex = 0; // Our Current Position on the Actions TimeLine
 			
 				// This executes a new Action and adds it to the history stack
 				this.doAction = function(action)
@@ -80,7 +80,7 @@
 						// To keep the timeline clean, the do action must always be the last one in the history
 						if(currentIndex < actionsHistory.length - 1)
 						{
-							actionsHistory.splice(currentIndex + 1, actionsHistory.length - 1); // Cut off previously known future
+							actionsHistory.splice(currentIndex + 1, actionsHistory.length); // Cut off previously known future of the timeline, preventing the `redo` from breaking the logics
 						}
 						
 						actionsHistory.push(action); // Add the action to the history
